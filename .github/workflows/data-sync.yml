@@ -4,6 +4,11 @@ on:
   schedule:
     - cron: "2,12,22,32,42,52 * * * *"
     - cron: "19 * * * *"
+  repository_dispatch:
+    types:
+      - data-sync-all
+      - data-sync-sheets
+      - data-sync-ticketmaster
   workflow_dispatch:
     inputs:
       target:
@@ -25,7 +30,8 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'sheets') ||
-      github.event_name == 'schedule' && github.event.schedule == '*/10 * * * *'
+      github.event_name == 'repository_dispatch' && (github.event.action == 'data-sync-all' || github.event.action == 'data-sync-sheets') ||
+      github.event_name == 'schedule' && github.event.schedule == '2,12,22,32,42,52 * * * *'
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
@@ -54,7 +60,8 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'ticketmaster') ||
-      github.event_name == 'schedule' && github.event.schedule == '17 * * * *'
+      github.event_name == 'repository_dispatch' && (github.event.action == 'data-sync-all' || github.event.action == 'data-sync-ticketmaster') ||
+      github.event_name == 'schedule' && github.event.schedule == '19 * * * *'
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
       SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
