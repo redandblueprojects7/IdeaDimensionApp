@@ -98,14 +98,28 @@ function parseCsv(text) {
 async function fetchSheetRows(spreadsheetId, gid) {
   const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv&gid=${gid}`;
   const response = await fetch(url);
+  const body = await response.text().catch(() => '(no body)');
 
-  if (!response.ok) {
-    const body = await response.text().catch(() => '(no body)');
+  const looksLikeGoogleAuthPage =
+    body.includes('Sign in to your Google Account') ||
+    body.includes('Allow Google Sheets access to your necessary cookies') ||
+    body.includes('<!DOCTYPE html>');
+
+  if (!response.ok || looksLikeGoogleAuthPage) {
+    if (looksLikeGoogleAuthPage) {
+      throw new Error(
+        [
+          'Google Sheets export returned an auth page instead of CSV.',
+          'Make sure the sheet is publicly readable (Share -> Anyone with the link -> Viewer),',
+          'and/or File -> Share -> Publish to web for the required tabs.',
+          `Spreadsheet ID: ${spreadsheetId}, GID: ${gid}`,
+        ].join(' ')
+      );
+    }
     throw new Error(`Google Sheets export failed (${response.status}): ${body}`);
   }
 
-  const text = await response.text();
-  return parseCsv(text);
+  return parseCsv(body);
 }
 
 function extractKeywordsFromRows(rows) {

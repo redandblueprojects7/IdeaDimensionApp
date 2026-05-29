@@ -16,9 +16,9 @@ alter table public.events
   add column if not exists source_event_id text,
   add column if not exists source_url text;
 
+drop index if exists public.events_source_event_unique;
 create unique index if not exists events_source_event_unique
-  on public.events (source, source_event_id)
-  where source_event_id is not null;
+  on public.events (source, source_event_id);
 
 create index if not exists events_source_idx
   on public.events (source);
@@ -59,9 +59,9 @@ alter table public.artists
   add column if not exists created_at timestamptz not null default now(),
   add column if not exists updated_at timestamptz not null default now();
 
+drop index if exists public.artists_source_artist_unique;
 create unique index if not exists artists_source_artist_unique
-  on public.artists (source, source_artist_id)
-  where source_artist_id is not null;
+  on public.artists (source, source_artist_id);
 
 create index if not exists artists_sort_name_idx
   on public.artists (sort_order, name);
