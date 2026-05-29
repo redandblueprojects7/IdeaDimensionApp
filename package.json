@@ -6,7 +6,9 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "sync:sheets": "node scripts/sync-google-sheets.mjs",
+    "sync:ticketmaster": "node scripts/sync-ticketmaster.mjs"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

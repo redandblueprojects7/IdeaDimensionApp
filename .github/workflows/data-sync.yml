@@ -1,0 +1,84 @@
+name: Data Sync
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+    - cron: "17 * * * *"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Which sync job to run"
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - sheets
+          - ticketmaster
+
+permissions:
+  contents: read
+
+jobs:
+  sync_sheets:
+    name: Sync Google Sheets
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'sheets') ||
+      github.event_name == 'schedule' && github.event.schedule == '*/10 * * * *'
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      GOOGLE_SHEETS_SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEETS_SPREADSHEET_ID }}
+      GOOGLE_SHEETS_EVENTS_GID: ${{ secrets.GOOGLE_SHEETS_EVENTS_GID }}
+      GOOGLE_SHEETS_ARTISTS_GID: ${{ secrets.GOOGLE_SHEETS_ARTISTS_GID }}
+      GOOGLE_SHEETS_PRUNE: ${{ secrets.GOOGLE_SHEETS_PRUNE }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run sheets sync
+        run: npm run sync:sheets
+
+  sync_ticketmaster:
+    name: Sync Ticketmaster
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' && (inputs.target == 'all' || inputs.target == 'ticketmaster') ||
+      github.event_name == 'schedule' && github.event.schedule == '17 * * * *'
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      TICKETMASTER_API_KEY: ${{ secrets.TICKETMASTER_API_KEY }}
+      GOOGLE_SHEETS_SPREADSHEET_ID: ${{ secrets.GOOGLE_SHEETS_SPREADSHEET_ID }}
+      GOOGLE_SHEETS_TICKETMASTER_KEYWORDS_GID: ${{ secrets.GOOGLE_SHEETS_TICKETMASTER_KEYWORDS_GID }}
+      TICKETMASTER_KEYWORDS: ${{ secrets.TICKETMASTER_KEYWORDS }}
+      TICKETMASTER_COUNTRY_CODE: ${{ secrets.TICKETMASTER_COUNTRY_CODE }}
+      TICKETMASTER_PAGE_SIZE: ${{ secrets.TICKETMASTER_PAGE_SIZE }}
+      TICKETMASTER_MAX_PAGES: ${{ secrets.TICKETMASTER_MAX_PAGES }}
+      TICKETMASTER_IS_PUBLISHED: ${{ secrets.TICKETMASTER_IS_PUBLISHED }}
+      TICKETMASTER_START_DATE_TIME: ${{ secrets.TICKETMASTER_START_DATE_TIME }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Ticketmaster sync
+        run: npm run sync:ticketmaster
